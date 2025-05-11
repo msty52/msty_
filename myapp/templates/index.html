@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кнопка с переливом + iframe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .btn {
+            position: relative;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: rgb(0, 0, 0);
+            background: #4a00e0;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            overflow: hidden;
+            z-index: 1;
+            margin-bottom: 20px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                #ff0000, #ff7300, #fffb00, #48ff00, 
+                #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+            background-size: 400%;
+            border-radius: 50px;
+            opacity: 0;
+            transition: opacity 0.3s, filter 0.3s;
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            opacity: 1;
+            filter: blur(5px);
+            animation: rainbow 8s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 400% 50%; }
+        }
+
+        /* Стили для iframe */
+        #site-frame {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #000000;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;  /* Сначала скрыт */
+        }
+    </style>
+</head>
+</html>
+<button 
+    class="btn" 
+    onclick="window.open('https://vk.com/audios585706433?section=all', '_blank')"
+>
+    открыть вконтакте
+</button>
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Переливающийся фон с кнопкой времени</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn {
+            position: relative;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            overflow: hidden;
+            z-index: 1;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .time-display {
+            font-size: 24px;
+            color: white;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        .time-display div {
+            margin: 5px 0;
+        }
+
+        .time {
+            font-size: 32px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="btn" id="time-btn">Показать время</button>
+        <div class="time-display" id="time-display">
+            <div id="weekday"></div>
+            <div id="date"></div>
+            <div class="time" id="time"></div>
+        </div>
+    </div>
+
+    <script>
+        const btn = document.getElementById("time-btn");
+        const timeDisplay = document.getElementById("time-display");
+        const weekdayEl = document.getElementById("weekday");
+        const dateEl = document.getElementById("date");
+        const timeEl = document.getElementById("time");
+        
+        let timeInterval = null;
+        let isTimeVisible = false;
+
+        // Функция обновления времени
+        function updateTime() {
+            const now = new Date();
+            const options = {
+                timeZone: 'Europe/Moscow',
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            
+            const formatter = new Intl.DateTimeFormat('ru-RU', options);
+            const parts = formatter.formatToParts(now);
+            
+            const weekday = parts.find(p => p.type === 'weekday').value;
+            const day = parts.find(p => p.type === 'day').value;
+            const month = parts.find(p => p.type === 'month').value;
+            const year = parts.find(p => p.type === 'year').value;
+            const hour = parts.find(p => p.type === 'hour').value;
+            const minute = parts.find(p => p.type === 'minute').value;
+            const second = parts.find(p => p.type === 'second').value;
+            
+            weekdayEl.textContent = weekday;
+            dateEl.textContent = `${day} ${month} ${year}`;
+            timeEl.textContent = `${hour}:${minute}:${second}`;
+        }
+
+        // Обработчик клика
+        btn.addEventListener('click', () => {
+            if (isTimeVisible) {
+                clearInterval(timeInterval);
+                timeDisplay.style.display = 'none';
+                btn.textContent = 'Показать время';
+            } else {
+                updateTime();
+                timeDisplay.style.display = 'block';
+                timeInterval = setInterval(updateTime, 1000);
+                btn.textContent = 'Скрыть время';
+            }
+            isTimeVisible = !isTimeVisible;
+        });
+
+        // Дополнительные эффекты для фона
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            document.body.style.backgroundPosition = `${x * 100}% ${y * 100}%`;
+        });
+    </script>
+</body>
+</html>
