@@ -7,7 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <style>
-        /* Стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -240,6 +239,7 @@
     <div class="hero">
         <div class="container">
             <h1>Чат-комнаты</h1>
+            <p>Общайтесь в реальном времени с друзьями и коллегами</p>
         </div>
     </div>
 
@@ -249,9 +249,14 @@
                 <h2>Добро пожаловать!</h2>
                 <p>Присоединяйтесь к нашему сообществу</p>
             </div>
-
+            
             <div class="chat-section hidden" id="chat-section">
-                <!-- Контент для авторизованных пользователей -->
+                <h3>Присоединяйтесь к общению</h3>
+                <p>Создавайте комнаты и общайтесь с другими пользователями в реальном времени</p>
+                <div class="chat-actions">
+                    <a href="home.html" class="btn">Перейти в чат</a>
+                    <a href="create_room.html" class="btn btn-secondary">Создать комнату</a>
+                </div>
             </div>
             
             <div class="auth-required" id="auth-required">
@@ -272,11 +277,10 @@
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            updateAuthUI();
-        });
+        // Инициализация Supabase
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function checkAuth() {
+        async function checkAuth() {
             const user = localStorage.getItem('currentUser');
             if (user) {
                 return JSON.parse(user);
@@ -284,8 +288,8 @@
             return null;
         }
 
-        function updateAuthUI() {
-            const user = checkAuth();
+        async function updateAuthUI() {
+            const user = await checkAuth();
             const authButtons = document.getElementById('auth-buttons');
             const userInfo = document.getElementById('user-info');
             const authRequired = document.getElementById('auth-required');
@@ -322,6 +326,8 @@
             localStorage.removeItem('currentUser');
             updateAuthUI();
         });
+
+        document.addEventListener('DOMContentLoaded', updateAuthUI);
     </script>
 </body>
 </html>
