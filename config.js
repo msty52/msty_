@@ -1,4 +1,2 @@
-// config.js - этот файл нужно создать отдельно
 const SUPABASE_URL = 'https://bgepyrtlzmqnljycvnqi.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnZXB5cnRsem1xbmxqeWN2bnFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0NTIxMjUsImV4cCI6MjA3NzAyODEyNX0.kqkNWji2uOaaV3qz2iarh6EuIDTfBrEEmPSQ-2ofdI0'; 
-
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnZXB5cnRsem1xbmxqeWN2bnFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0NTIxMjUsImV4cCI6MjA3NzAyODEyNX0.kqkNWji2uOaaV3qz2iarh6EuIDTfBrEEmPSQ-2ofdI0';
