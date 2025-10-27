@@ -1,0 +1,89 @@
+<script>
+// Улучшения для формы регистрации
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('id_password1');
+    const confirmPasswordInput = document.getElementById('id_password2');
+    
+    if (passwordInput) {
+        // Создаем индикатор силы пароля
+        const passwordStrength = document.createElement('div');
+        passwordStrength.className = 'password-strength';
+        passwordStrength.innerHTML = `
+            <div class="password-strength-bar"></div>
+            <div class="password-strength-text"></div>
+        `;
+        passwordInput.parentNode.appendChild(passwordStrength);
+        
+        passwordInput.addEventListener('input', function() {
+            updatePasswordStrength(this.value);
+        });
+        
+        // Проверка совпадения паролей
+        if (confirmPasswordInput) {
+            confirmPasswordInput.addEventListener('input', function() {
+                checkPasswordMatch();
+            });
+        }
+    }
+    
+    function updatePasswordStrength(password) {
+        const strengthBar = document.querySelector('.password-strength-bar');
+        const strengthText = document.querySelector('.password-strength-text');
+        const container = document.querySelector('.password-strength');
+        
+        let strength = 0;
+        let text = '';
+        
+        if (password.length >= 8) strength += 1;
+        if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength += 1;
+        if (password.match(/\d/)) strength += 1;
+        if (password.match(/[^a-zA-Z\d]/)) strength += 1;
+        
+        container.className = 'password-strength';
+        
+        switch(strength) {
+            case 0:
+            case 1:
+                container.classList.add('weak');
+                text = 'Слабый';
+                break;
+            case 2:
+            case 3:
+                container.classList.add('medium');
+                text = 'Средний';
+                break;
+            case 4:
+                container.classList.add('strong');
+                text = 'Сильный';
+                break;
+        }
+        
+        if (password.length === 0) {
+            strengthText.textContent = '';
+        } else {
+            strengthText.textContent = text;
+        }
+    }
+    
+    function checkPasswordMatch() {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        
+        if (confirmPassword && password !== confirmPassword) {
+            confirmPasswordInput.style.borderColor = '#e74c3c';
+        } else if (confirmPassword) {
+            confirmPasswordInput.style.borderColor = '#27ae60';
+        }
+    }
+    
+    // Анимация отправки формы
+    const form = document.querySelector('.auth-form-content');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('.submit-btn');
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+        });
+    }
+});
+</script>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Удаление комнаты - {{ room.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .room-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗑️ Удаление комнаты</h1>
+    
+    <div class="warning-box">
+        <h3 style="color: #856404; margin-top: 0;">⚠️ Внимание!</h3>
+        <p>Вы собираетесь удалить комнату <strong>"{{ room.name }}"</strong>.</p>
+        <p>Это действие <strong style="color: #dc3545;">нельзя отменить</strong>. Будут удалены:</p>
+        <ul>
+            <li>Все сообщения в этой комнате ({{ room.messages.count }})</li>
+            <li>Все записи об участниках ({{ room.members.count }})</li>
+            <li>Сама комната</li>
+        </ul>
+    </div>
+    
+    <div class="room-info">
+        <h3>Информация о комнате:</h3>
+        <p><strong>Название:</strong> {{ room.name }}</p>
+        <p><strong>Описание:</strong> {{ room.description|default:"Нет описания" }}</p>
+        <p><strong>Создана:</strong> {{ room.created_by.username }} • {{ room.created_at|date:"d.m.Y H:i" }}</p>
+        <p><strong>Сообщений:</strong> {{ room.messages.count }}</p>
+        <p><strong>Участников:</strong> {{ room.members.count }}</p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger" 
+                onclick="return confirm('Вы ТОЧНО уверены? Это действие нельзя отменить!');">
+            🗑️ Да, удалить комнату
+        </button>
+        <a href="{% url 'home' %}" class="btn btn-secondary">❌ Отмена</a>
+    </form>
+</body>
+</html>

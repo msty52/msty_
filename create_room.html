@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать комнату - Чат-комнаты</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 20px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+        }
+        
+        .btn-success:hover {
+            background-color: #219a52;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">Чат-комнаты</div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="home.html">Чат</a></li>
+                    <li><a href="create_room.html">Создать комнату</a></li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <span id="username-display">Гость</span>
+                <button class="btn btn-secondary" id="logout-btn">Выйти</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="content">
+            <h1>Создать новую комнату</h1>
+            
+            <div class="success-message hidden" id="success-message">
+                Комната успешно создана! Перенаправление...
+            </div>
+            
+            <div class="error-message hidden" id="error-message">
+                Ошибка при создании комнаты
+            </div>
+            
+            <form id="create-room-form">
+                <div class="form-group">
+                    <label for="room-name">Название комнаты *</label>
+                    <input type="text" id="room-name" name="room-name" placeholder="Введите название комнаты" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="room-description">Описание комнаты</label>
+                    <textarea id="room-description" name="room-description" placeholder="Опишите тему общения в комнате"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="room-privacy">Тип комнаты</label>
+                    <select id="room-privacy" name="room-privacy">
+                        <option value="public">Публичная</option>
+                        <option value="private">Приватная</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">Создать комнату</button>
+                    <a href="home.html" class="btn btn-secondary">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Чат-комнаты. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script>
+        let supabaseClient;
+        let currentUser = null;
+
+        // Проверка авторизации
+        async function checkAuth() {
+            const user = localStorage.getItem('currentUser');
+            if (!user) {
+                window.location.href = 'auth.html';
+                return null;
+            }
+            return JSON.parse(user);
+        }
+
+        // Инициализация
+        window.addEventListener('load', async function() {
+            console.log('Page loaded, initializing create room...');
+            
+            // Проверяем библиотеки
+            if (typeof window.supabase === 'undefined') {
+                console.error('Supabase library not loaded!');
+                document.getElementById('error-message').textContent = 'Библиотека Supabase не загружена';
+                document.getElementById('error-message').classList.remove('hidden');
+                return;
+            }
+            
+            if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
+                console.error('Config not loaded!');
+                document.getElementById('error-message').textContent = 'Конфигурация не загружена. Проверьте config.js';
+                document.getElementById('error-message').classList.remove('hidden');
+                return;
+            }
+            
+            // Инициализируем Supabase
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase инициализирован');
+            
+            // Проверяем авторизацию
+            currentUser = await checkAuth();
+            if (currentUser) {
+                document.getElementById('username-display').textContent = currentUser.username;
+            }
+        });
+
+        document.getElementById('create-room-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const roomName = document.getElementById('room-name').value;
+            const roomDescription = document.getElementById('room-description').value;
+            const roomPrivacy = document.getElementById('room-privacy').value;
+            
+            // Скрываем сообщения
+            document.getElementById('success-message').classList.add('hidden');
+            document.getElementById('error-message').classList.add('hidden');
+            
+            console.log('Создание комнаты:', { roomName, roomDescription, roomPrivacy });
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('rooms')
+                    .insert([
+                        {
+                            name: roomName,
+                            description: roomDescription,
+                            privacy: roomPrivacy,
+                            creator_id: currentUser.id
+                        }
+                    ])
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Ошибка создания комнаты:', error);
+                    document.getElementById('error-message').textContent = 'Ошибка создания комнаты: ' + error.message;
+                    document.getElementById('error-message').classList.remove('hidden');
+                } else {
+                    console.log('Комната создана:', data);
+                    document.getElementById('success-message').classList.remove('hidden');
+                    document.getElementById('create-room-form').reset();
+                    
+                    setTimeout(() => {
+                        window.location.href = `room_detail.html?room=${data.id}`;
+                    }, 1500);
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                document.getElementById('error-message').textContent = 'Ошибка: ' + error.message;
+                document.getElementById('error-message').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Создать чат-комнату</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            margin: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 0 0 10px 0;
+            font-size: 2.2em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            color: #666;
+            margin: 0;
+            font-size: 1.1em;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 1em;
+        }
+        
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        input[type="text"]::placeholder, textarea::placeholder {
+            color: #a0a0a0;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e1e5e9;
+            margin-top: 15px;
+        }
+        
+        .btn-secondary:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+        
+        .username-display {
+            background: #e3f2fd;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .username-display strong {
+            color: #1976d2;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f44336;
+        }
+        
+        .form-icon {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .form-icon span {
+    font-size: 3em;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    background-clip: text; /* Добавлено стандартное свойство */
+    -webkit-text-fill-color: transparent;
+}
+        .field-hint {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="form-icon">
+                <span>💬</span>
+            </div>
+            <h1>Создать чат</h1>
+            <p>Создайте новое пространство для общения</p>
+        </div>
+        
+        {% if username %}
+            <div class="username-display">
+                👤 Вы вошли как: <strong>{{ username }}</strong>
+            </div>
+        {% endif %}
+        
+        {% if error_message %}
+            <div class="error">
+                ⚠️ {{ error_message }}
+            </div>
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="name">🎯 Название комнаты</label>
+                <input type="text" id="name" name="name" required 
+                       placeholder="Придумайте уникальное название для комнаты"
+                       value="{{ request.POST.name }}">
+                <div class="field-hint">Это название будут видеть все участники</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="username">👤 Ваше имя</label>
+                <input type="text" id="username" name="username" 
+                       value="{{ username }}" placeholder="Как к вам обращаться?" required>
+                <div class="field-hint">Будет отображаться в чате</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">📝 Описание комнаты</label>
+                <textarea id="description" name="description" 
+                          placeholder="Опишите тему общения в этой комнате (необязательно)">{{ request.POST.description }}</textarea>
+                <div class="field-hint">Помогите участникам понять, о чём будет идти речь</div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                🚀 Создать комнату
+            </button>
+            
+            <a href="{% url 'home' %}" class="btn btn-secondary">
+                ← Назад к списку комнат
+            </a>
+        </form>
+    </div>
+
+    <script>
+        // Автофокус на поле названия
+        document.getElementById('name').focus();
+        
+        // Плавная валидация формы
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const nameField = document.getElementById('name');
+            const usernameField = document.getElementById('username');
+            let isValid = true;
+            
+            if (!nameField.value.trim()) {
+                nameField.style.borderColor = '#f44336';
+                isValid = false;
+            }
+            
+            if (!usernameField.value.trim()) {
+                usernameField.style.borderColor = '#f44336';
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                // Возвращаем нормальный цвет через секунду
+                setTimeout(() => {
+                    nameField.style.borderColor = '#e1e5e9';
+                    usernameField.style.borderColor = '#e1e5e9';
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

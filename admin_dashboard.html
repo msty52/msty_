@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Панель администратора{% endblock %}
+
+{% block header_title %}Панель администратора{% endblock %}
+
+{% block content %}
+    {% if not user.is_staff %}
+        <div class="alert alert-warning">
+            У вас нет прав для доступа к этой странице.
+        </div>
+    {% else %}
+        <div class="admin-panel">
+            <h2>Управление системой</h2>
+            
+            <div class="admin-section">
+                <h3>Управление комнатами</h3>
+                <div class="admin-controls">
+                    <a href="{% url 'room_list' %}" class="admin-btn">Просмотр всех комнат</a>
+                    <a href="{% url 'create_room' %}" class="admin-btn edit">Создать комнату</a>
+                </div>
+            </div>
+            
+            <div class="admin-section">
+                <h3>Управление пользователями</h3>
+                <div class="admin-controls">
+                    <a href="{% url 'manage_users' %}" class="admin-btn">Просмотр пользователей</a>
+                    <button onclick="showBanUserModal()" class="admin-btn">Заблокировать пользователя</button>
+                </div>
+            </div>
+            
+            <div class="admin-section">
+                <h3>Статистика системы</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Всего комнат</h4>
+                        <span id="totalRooms">{{ total_rooms }}</span>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Всего пользователей</h4>
+                        <span id="totalUsers">{{ total_users }}</span>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Активных сессий</h4>
+                        <span id="activeSessions">{{ active_sessions }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <h3>Быстрые действия</h3>
+                <div class="admin-controls">
+                    <button onclick="clearOldMessages()" class="admin-btn">Очистить старые сообщения</button>
+                    <button onclick="backupDatabase()" class="admin-btn edit">Создать backup</button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function showBanUserModal() {
+        // Реализация модального окна для блокировки пользователя
+        const username = prompt('Введите username пользователя для блокировки:');
+        if (username) {
+            fetch('/admin/ban_user/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'username': username
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Пользователь заблокирован');
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            });
+        }
+    }
+
+    function clearOldMessages() {
+        if (confirm('Очистить сообщения старше 30 дней?')) {
+            fetch('/admin/clear_old_messages/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Старые сообщения очищены');
+                }
+            });
+        }
+    }
+
+    function backupDatabase() {
+        fetch('/admin/create_backup/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Backup создан успешно');
+            }
+        });
+    }
+</script>
+{% endblock %}

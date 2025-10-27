@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат-комнаты | Общение в реальном времени</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-section h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        .welcome-section p {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #4a6cf7;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a5ce5;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .user-info {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .user-info h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .guest-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .rooms-section {
+            margin-top: 30px;
+        }
+
+        .room-card {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .room-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .room-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .room-members {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .room-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: white;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Чат-комнаты</h1>
+            <p>Общайтесь в реальном времени с друзьями и коллегами</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Информация о пользователе -->
+            <div id="userInfo" class="user-info">
+                <h3>👋 Добро пожаловать, <span id="currentUser">Пользователь</span>!</h3>
+                <p>Вы успешно вошли в систему</p>
+                <button onclick="logout()" class="logout-btn">🚪 Выйти</button>
+            </div>
+
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <h2>Добро пожаловать!</h2>
+                <p>Присоединяйтесь к нашему сообществу</p>
+                <div class="auth-buttons">
+                    <button onclick="window.location.href='auth.html'" class="btn btn-primary">Войти</button>
+                    <button onclick="window.location.href='register.html'" class="btn btn-primary">Регистрация</button>
+                </div>
+            </div>
+
+            <!-- Guest Notice -->
+            <div id="guestNotice" class="guest-notice">
+                <p>🔒 Для создания комнат и отправки сообщений необходимо авторизоваться</p>
+                <div class="auth-buttons">
+                    <button onclick="window.location.href='auth.html'" class="btn btn-primary">Войти в систему</button>
+                    <button onclick="window.location.href='register.html'" class="btn btn-primary">Создать аккаунт</button>
+                </div>
+            </div>
+
+            <!-- Rooms Section -->
+            <div class="rooms-section">
+                <!-- Room 1 -->
+                <div class="room-card" onclick="enterRoom('general')">
+                    <div class="room-header">
+                        <div class="room-title">🌐 Общая комната</div>
+                        <div class="room-members">👥 <span id="generalUsers">1</span> участников</div>
+                    </div>
+                    <p class="room-description">
+                        Основное пространство для общения на любые темы. Знакомьтесь, общайтесь, находите новых друзей!
+                    </p>
+                </div>
+
+                <!-- Room 2 -->
+                <div class="room-card" onclick="enterRoom('tech')">
+                    <div class="room-header">
+                        <div class="room-title">💻 Технические вопросы</div>
+                        <div class="room-members">👥 <span id="techUsers">0</span> участников</div>
+                    </div>
+                    <p class="room-description">
+                        Помощь с программированием, IT и технологиями. Задавайте вопросы, помогайте другим!
+                    </p>
+                </div>
+
+                <!-- Room 3 -->
+                <div class="room-card" onclick="enterRoom('games')">
+                    <div class="room-header">
+                        <div class="room-title">🎮 Игры и развлечения</div>
+                        <div class="room-members">👥 <span id="gamesUsers">0</span> участников</div>
+                    </div>
+                    <p class="room-description">
+                        Обсуждаем игры, кино, музыку и другие развлечения. Делитесь впечатлениями и находите единомышленников!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 Чат-комнаты</p>
+        </div>
+    </div>
+
+    <script>
+        // Проверяем, авторизован ли пользователь
+        function checkAuth() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('guestNotice').style.display = 'none';
+                document.getElementById('currentUser').textContent = currentUser;
+            } else {
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('guestNotice').style.display = 'block';
+            }
+        }
+
+        // Вход в комнату
+        function enterRoom(roomId) {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                alert('Пожалуйста, войдите в систему');
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            // Сохраняем выбранную комнату
+            localStorage.setItem('currentRoom', roomId);
+            
+            // Переходим в чат
+            window.location.href = 'room_detail.html';
+        }
+
+        // Выход из системы
+        function logout() {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('currentRoom');
+            checkAuth();
+            alert('Вы успешно вышли из системы');
+        }
+
+        // При загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            
+            // Обновляем счетчики пользователей
+            updateOnlineUsers();
+        });
+
+        function updateOnlineUsers() {
+            // Демо-данные
+            document.getElementById('generalUsers').textContent = '3';
+            document.getElementById('techUsers').textContent = '1';
+            document.getElementById('gamesUsers').textContent = '2';
+        }
+    </script>
+</body>
+</html>

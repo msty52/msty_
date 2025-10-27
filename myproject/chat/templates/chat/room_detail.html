@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат-комната</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .room-header {
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .room-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+            flex: 1;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .messages-list {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #f0f2f5;
+        }
+
+        .message {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            max-width: 80%;
+        }
+
+        .message.own-message {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .message.own-message .message-avatar {
+            background: #007bff;
+        }
+
+        .message-content {
+            background: white;
+            border-radius: 12px;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+            max-width: 100%;
+        }
+
+        .message.own-message .message-content {
+            background: #007bff;
+            color: white;
+            border: none;
+        }
+
+        .message-username {
+            font-weight: 600;
+            font-size: 0.75rem;
+            margin-bottom: 2px;
+        }
+
+        .message-text {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            word-wrap: break-word;
+        }
+
+        .message-time {
+            position: absolute;
+            bottom: 4px;
+            right: 8px;
+            font-size: 0.65rem;
+            opacity: 0.7;
+        }
+
+        .message-input-area {
+            padding: 12px 15px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+            flex-shrink: 0;
+        }
+
+        .message-form {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            outline: none;
+            resize: none;
+            min-height: 40px;
+            max-height: 120px;
+            font-family: inherit;
+        }
+
+        .send-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 20px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            background: #0056b3;
+        }
+
+        .guest-notice {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 10px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .empty-messages {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8e8e93;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .system-message {
+            align-self: center;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin: 5px 0;
+            max-width: 60%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="room-header">
+            <a href="index.html" class="back-btn">← Назад</a>
+            <div class="room-title" id="roomTitle">💬 Загрузка...</div>
+        </div>
+
+        <div class="chat-container">
+            <div class="messages-list" id="messagesList">
+                <div class="empty-messages">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">💬</div>
+                    <h3>Загрузка чата...</h3>
+                </div>
+            </div>
+
+            <div class="message-input-area" id="messageInputArea">
+                <!-- Форма ввода сообщения будет добавлена JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let currentUser = null;
+        let currentRoom = null;
+        let messages = [];
+
+        // Инициализация чата
+        function initChat() {
+            // Получаем данные из localStorage
+            currentUser = localStorage.getItem('currentUser');
+            currentRoom = localStorage.getItem('currentRoom');
+
+            if (!currentUser) {
+                showGuestNotice();
+                return;
+            }
+
+            if (!currentRoom) {
+                currentRoom = 'general';
+            }
+
+            // Устанавливаем название комнаты
+            const roomTitles = {
+                'general': '🌐 Общая комната',
+                'tech': '💻 Технические вопросы', 
+                'games': '🎮 Игры и развлечения'
+            };
+            document.getElementById('roomTitle').textContent = roomTitles[currentRoom] || '💬 Чат-комната';
+
+            // Показываем интерфейс чата
+            showChatInterface();
+
+            // Загружаем сообщения
+            loadMessages();
+
+            // Добавляем приветственное сообщение
+            addSystemMessage(`Добро пожаловать в чат, ${currentUser}!`);
+        }
+
+        // Показ уведомления для гостей
+        function showGuestNotice() {
+            const messagesList = document.getElementById('messagesList');
+            const messageInputArea = document.getElementById('messageInputArea');
+            
+            messagesList.innerHTML = `
+                <div class="empty-messages">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🔒</div>
+                    <h3>Доступ запрещен</h3>
+                    <p>Для доступа к чату необходимо войти в систему</p>
+                </div>
+            `;
+            
+            messageInputArea.innerHTML = `
+                <div class="guest-notice">
+                    <p>🔒 <a href="auth.html" style="color: #007bff; text-decoration: none; font-weight: 600;">Войдите</a> или <a href="register.html" style="color: #007bff; text-decoration: none; font-weight: 600;">зарегистрируйтесь</a> для общения в чате</p>
+                </div>
+            `;
+        }
+
+        // Показ интерфейса чата
+        function showChatInterface() {
+            const messageInputArea = document.getElementById('messageInputArea');
+            
+            messageInputArea.innerHTML = `
+                <form class="message-form" id="messageForm">
+                    <textarea 
+                        class="message-input" 
+                        id="messageInput"
+                        placeholder="Напишите сообщение..." 
+                        required
+                        rows="1"
+                    ></textarea>
+                    <button type="submit" class="send-btn">Отправить</button>
+                </form>
+            `;
+
+            // Настраиваем обработчик формы
+            document.getElementById('messageForm').addEventListener('submit', sendMessage);
+            
+            // Настраиваем авто-размер textarea
+            const messageInput = document.getElementById('messageInput');
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+        }
+
+        // Загрузка сообщений
+        function loadMessages() {
+            // Загружаем сообщения из localStorage
+            const savedMessages = localStorage.getItem(`messages_${currentRoom}`);
+            if (savedMessages) {
+                messages = JSON.parse(savedMessages);
+            } else {
+                // Начальные сообщения для демонстрации
+                messages = [
+                    {
+                        user: 'Бот',
+                        text: 'Добро пожаловать в чат! Здесь вы можете общаться с другими участниками.',
+                        time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                        type: 'system'
+                    },
+                    {
+                        user: 'Администратор', 
+                        text: 'Приветствуем нового участника!',
+                        time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                        type: 'user'
+                    }
+                ];
+                saveMessages();
+            }
+
+            displayMessages();
+        }
+
+        // Отображение сообщений
+        function displayMessages() {
+            const messagesList = document.getElementById('messagesList');
+            messagesList.innerHTML = '';
+
+            if (messages.length === 0) {
+                messagesList.innerHTML = `
+                    <div class="empty-messages">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">💬</div>
+                        <h3>Здесь пока тихо</h3>
+                        <p>Будьте первым, кто напишет сообщение!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            messages.forEach(message => {
+                if (message.type === 'system') {
+                    const systemMsg = document.createElement('div');
+                    systemMsg.className = 'system-message';
+                    systemMsg.textContent = message.text;
+                    messagesList.appendChild(systemMsg);
+                } else {
+                    const messageDiv = document.createElement('div');
+                    const isOwnMessage = message.user === currentUser;
+                    
+                    messageDiv.className = `message ${isOwnMessage ? 'own-message' : ''}`;
+                    messageDiv.innerHTML = `
+                        <div class="message-avatar">${message.user[0].toUpperCase()}</div>
+                        <div class="message-content">
+                            <div class="message-username">
+                                ${isOwnMessage ? 'Вы' : message.user}
+                            </div>
+                            <div class="message-text">${message.text}</div>
+                            <div class="message-time">${message.time}</div>
+                        </div>
+                    `;
+                    
+                    messagesList.appendChild(messageDiv);
+                }
+            });
+
+            scrollToBottom();
+        }
+
+        // Отправка сообщения
+        function sendMessage(e) {
+            e.preventDefault();
+            
+            const messageInput = document.getElementById('messageInput');
+            const text = messageInput.value.trim();
+            
+            if (!text) return;
+
+            // Создаем новое сообщение
+            const newMessage = {
+                user: currentUser,
+                text: text,
+                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                type: 'user'
+            };
+
+            // Добавляем в массив сообщений
+            messages.push(newMessage);
+            
+            // Сохраняем в localStorage
+            saveMessages();
+            
+            // Отображаем сообщение
+            displayMessages();
+            
+            // Очищаем поле ввода
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            // Прокручиваем вниз
+            scrollToBottom();
+
+            // Авто-ответ для демонстрации
+            setTimeout(() => {
+                if (Math.random() > 0.7) { // 30% шанс на авто-ответ
+                    const autoResponses = [
+                        "Интересное сообщение!",
+                        "Спасибо за ваше сообщение!",
+                        "Продолжайте в том же духе!",
+                        "Отличная мысль!",
+                        "Я тоже так думаю!"
+                    ];
+                    const autoResponse = autoResponses[Math.floor(Math.random() * autoResponses.length)];
+                    
+                    const botMessage = {
+                        user: 'Бот',
+                        text: autoResponse,
+                        time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                        type: 'user'
+                    };
+                    
+                    messages.push(botMessage);
+                    saveMessages();
+                    displayMessages();
+                }
+            }, 1000 + Math.random() * 2000);
+        }
+
+        // Добавление системного сообщения
+        function addSystemMessage(text) {
+            const systemMessage = {
+                user: 'Система',
+                text: text,
+                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                type: 'system'
+            };
+            
+            messages.push(systemMessage);
+            saveMessages();
+            displayMessages();
+        }
+
+        // Сохранение сообщений в localStorage
+        function saveMessages() {
+            localStorage.setItem(`messages_${currentRoom}`, JSON.stringify(messages));
+        }
+
+        // Прокрутка вниз
+        function scrollToBottom() {
+            const messagesList = document.getElementById('messagesList');
+            messagesList.scrollTop = messagesList.scrollHeight;
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            initChat();
+            
+            // Фокус на поле ввода
+            setTimeout(() => {
+                const messageInput = document.getElementById('messageInput');
+                if (messageInput) {
+                    messageInput.focus();
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

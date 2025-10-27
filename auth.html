@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход - Чат-комнаты</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        
+        .auth-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .auth-header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+            margin-top: 10px;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .auth-links {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .auth-links a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1>Вход</h1>
+                <p>Войдите в свой аккаунт</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Имя пользователя</label>
+                    <input type="text" id="username" name="username" placeholder="Введите имя пользователя" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" placeholder="Введите пароль" required>
+                </div>
+                
+                <div id="error-message" class="error-message hidden"></div>
+                
+                <button type="submit" class="btn">Войти</button>
+            </form>
+            
+            <a href="index.html" class="btn btn-secondary">На главную</a>
+            
+            <div class="auth-links">
+                <p>Нет аккаунта? <a href="register.html">Зарегистрируйтесь</a></p>
+            </div>
+        </div>
+    </div>
+
+  <script>
+    // Инициализация Supabase после загрузки страницы
+    let supabaseClient;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Проверяем что конфиг загружен
+        if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
+            console.error('Config не загружен! Проверьте config.js');
+            document.getElementById('error-message').textContent = 'Ошибка конфигурации. Проверьте config.js';
+            document.getElementById('error-message').classList.remove('hidden');
+            return;
+        }
+        
+        console.log('Инициализация Supabase...', SUPABASE_URL);
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('Supabase инициализирован');
+
+        // Проверка авторизации
+        const user = localStorage.getItem('currentUser');
+        if (user) {
+            window.location.href = 'index.html';
+        }
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Ждем инициализации supabase
+        if (!supabaseClient) {
+            console.error('Supabase не инициализирован');
+            document.getElementById('error-message').textContent = 'Supabase не инициализирован';
+            document.getElementById('error-message').classList.remove('hidden');
+            return;
+        }
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorMessage = document.getElementById('error-message');
+        
+        try {
+            console.log('Поиск пользователя:', username);
+            // Ищем пользователя в базе данных
+            const { data: user, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('username', username)
+                .eq('password', password)
+                .single();
+
+            console.log('Результат поиска:', { user, error });
+
+            if (error || !user) {
+                errorMessage.textContent = 'Неверное имя пользователя или пароль';
+                errorMessage.classList.remove('hidden');
+            } else {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                window.location.href = 'index.html';
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            errorMessage.textContent = 'Ошибка соединения с сервером: ' + error.message;
+            errorMessage.classList.remove('hidden');
+        }
+    });
+</script>
