@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Чат-комнаты</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
     <style>
         * {
             margin: 0;
@@ -277,12 +275,7 @@
     </footer>
 
     <script>
-        // Инициализация Supabase
-     const SUPABASE_URL = 'https://bgepyrtlzmqnljycvnqi.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnZXB5cnRsem1xbmxqeWN2bnFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0NTIxMjUsImV4cCI6MjA3NzAyODEyNX0.kqkNWji2uOaaV3qz2iarh6EuIDTfBrEEmPSQ-2ofdI0'; // из Supabase API Keys
-</script>
-
-        async function checkAuth() {
+        function checkAuth() {
             const user = localStorage.getItem('currentUser');
             if (user) {
                 return JSON.parse(user);
@@ -290,8 +283,8 @@
             return null;
         }
 
-        async function updateAuthUI() {
-            const user = await checkAuth();
+        function updateAuthUI() {
+            const user = checkAuth();
             const authButtons = document.getElementById('auth-buttons');
             const userInfo = document.getElementById('user-info');
             const authRequired = document.getElementById('auth-required');
