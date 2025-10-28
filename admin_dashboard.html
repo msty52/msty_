@@ -1,11 +1,8 @@
-{% extends 'base.html' %}
+<div style="background:#fff3cd; border:2px solid #ffc107; padding:15px; margin:20px 0; border-radius:5px;">
+    <strong>⚠️ Учебный проект</strong><br>
+    Демонстрационный сайт для изучения веб-разработки. Не является коммерческим сервисом.
+</div>
 
-{% block title %}Панель администратора{% endblock %}
-
-{% block header_title %}Панель администратора{% endblock %}
-
-{% block content %}
-    {% if not user.is_staff %}
         <div class="alert alert-warning">
             У вас нет прав для доступа к этой странице.
         </div>
