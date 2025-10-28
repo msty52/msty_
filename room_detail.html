@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Чат комнаты - Чат-комнаты</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
     <style>
         * {
             margin: 0;
@@ -269,13 +267,10 @@
     </footer>
 
     <script>
-        let supabaseClient;
         let currentRoom = null;
         let currentUser = null;
-        let messageSubscription = null;
 
-        // Проверка авторизации
-        async function checkAuth() {
+        function checkAuth() {
             const user = localStorage.getItem('currentUser');
             if (!user) {
                 window.location.href = 'auth.html';
@@ -284,76 +279,40 @@
             return JSON.parse(user);
         }
 
-        // Загрузка комнаты
-        async function loadRoom() {
+        function loadRoom() {
             const urlParams = new URLSearchParams(window.location.search);
             const roomId = urlParams.get('room');
             
             if (!roomId) {
-                console.error('ID комнаты не указан');
                 window.location.href = 'home.html';
                 return;
             }
 
-            try {
-                console.log('Загрузка комнаты:', roomId);
-                const { data: room, error } = await supabaseClient
-                    .from('rooms')
-                    .select(`
-                        *,
-                        users:creator_id(username)
-                    `)
-                    .eq('id', roomId)
-                    .single();
-
-                if (error || !room) {
-                    console.error('Комната не найдена:', error);
-                    alert('Комната не найдена');
-                    window.location.href = 'home.html';
-                    return;
-                }
-
-                currentRoom = room;
-                document.getElementById('room-name').textContent = room.name;
-                document.getElementById('room-description').textContent = room.description || 'Нет описания';
-
-                // Показываем кнопку удаления только создателю комнаты
-                if (room.creator_id === currentUser.id) {
-                    document.getElementById('delete-room-btn').classList.remove('hidden');
-                }
-
-                await loadMessages();
-                setupRealtimeMessages();
-
-            } catch (error) {
-                console.error('Ошибка загрузки комнаты:', error);
-                alert('Ошибка загрузки комнаты: ' + error.message);
+            const rooms = JSON.parse(localStorage.getItem('rooms')) || [];
+            const room = rooms.find(r => r.id === roomId);
+            
+            if (!room) {
+                alert('Комната не найдена');
+                window.location.href = 'home.html';
+                return;
             }
+
+            currentRoom = room;
+            document.getElementById('room-name').textContent = room.name;
+            document.getElementById('room-description').textContent = room.description || 'Нет описания';
+
+            if (room.creator_id === currentUser.id) {
+                document.getElementById('delete-room-btn').classList.remove('hidden');
+            }
+
+            loadMessages();
         }
 
-        // Загрузка сообщений
-        async function loadMessages() {
-            try {
-                console.log('Загрузка сообщений для комнаты:', currentRoom.id);
-                const { data: messages, error } = await supabaseClient
-                    .from('messages')
-                    .select(`
-                        *,
-                        users:user_id(username)
-                    `)
-                    .eq('room_id', currentRoom.id)
-                    .order('created_at', { ascending: true });
-
-                if (error) {
-                    console.error('Ошибка загрузки сообщений:', error);
-                    return;
-                }
-
-                console.log('Загружено сообщений:', messages);
-                displayMessages(messages);
-            } catch (error) {
-                console.error('Ошибка:', error);
-            }
+        function loadMessages() {
+            const messages = JSON.parse(localStorage.getItem('messages')) || [];
+            const roomMessages = messages.filter(msg => msg.room_id === currentRoom.id);
+            
+            displayMessages(roomMessages);
         }
 
         function displayMessages(messages) {
@@ -384,7 +343,7 @@
             
             messageElement.innerHTML = `
                 <div class="message-header">
-                    <span class="message-user">${message.users.username}</span>
+                    <span class="message-user">${message.username}</span>
                     <span class="message-time">${timeStr}</span>
                 </div>
                 <div class="message-content">${message.content}</div>
@@ -397,126 +356,48 @@
             }
         }
 
-        function setupRealtimeMessages() {
-            // Отписываемся от предыдущей подписки
-            if (messageSubscription) {
-                supabaseClient.removeChannel(messageSubscription);
-            }
-
-            console.log('Настройка realtime для комнаты:', currentRoom.id);
-            
-            // Подписываемся на новые сообщения
-            messageSubscription = supabaseClient
-                .channel('room-messages')
-                .on('postgres_changes', 
-                    { 
-                        event: 'INSERT', 
-                        schema: 'public', 
-                        table: 'messages',
-                        filter: `room_id=eq.${currentRoom.id}`
-                    }, 
-                    (payload) => {
-                        console.log('Новое сообщение:', payload);
-                        // Загружаем полные данные сообщения с именем пользователя
-                        supabaseClient
-                            .from('messages')
-                            .select(`
-                                *,
-                                users:user_id(username)
-                            `)
-                            .eq('id', payload.new.id)
-                            .single()
-                            .then(({ data: message }) => {
-                                if (message) {
-                                    addMessageToChat(message);
-                                }
-                            });
-                    }
-                )
-                .subscribe((status) => {
-                    console.log('Realtime статус:', status);
-                });
-        }
-
-        async function sendMessage() {
+        function sendMessage() {
             const messageInput = document.getElementById('message-input');
             const content = messageInput.value.trim();
             
             if (!content) return;
 
-            console.log('Отправка сообщения:', content);
-
-            try {
-                const { data, error } = await supabaseClient
-                    .from('messages')
-                    .insert([
-                        {
-                            room_id: currentRoom.id,
-                            user_id: currentUser.id,
-                            content: content
-                        }
-                    ])
-                    .select()
-                    .single();
-
-                if (error) {
-                    console.error('Ошибка отправки сообщения:', error);
-                    alert('Ошибка отправки: ' + error.message);
-                } else {
-                    console.log('Сообщение отправлено:', data);
-                    messageInput.value = '';
-                }
-            } catch (error) {
-                console.error('Ошибка:', error);
-                alert('Ошибка: ' + error.message);
-            }
+            const message = {
+                id: 'msg_' + Date.now(),
+                room_id: currentRoom.id,
+                user_id: currentUser.id,
+                username: currentUser.username,
+                content: content,
+                created_at: new Date().toISOString()
+            };
+            
+            let messages = JSON.parse(localStorage.getItem('messages')) || [];
+            messages.push(message);
+            localStorage.setItem('messages', JSON.stringify(messages));
+            
+            addMessageToChat(message);
+            messageInput.value = '';
         }
 
-        async function deleteRoom() {
+        function deleteRoom() {
             if (!confirm('Вы уверены, что хотите удалить эту комнату? Все сообщения будут удалены.')) return;
 
-            try {
-                const { error } = await supabaseClient
-                    .from('rooms')
-                    .delete()
-                    .eq('id', currentRoom.id);
-
-                if (error) {
-                    alert('Ошибка при удалении комнаты: ' + error.message);
-                } else {
-                    window.location.href = 'home.html';
-                }
-            } catch (error) {
-                console.error('Ошибка:', error);
-            }
+            let rooms = JSON.parse(localStorage.getItem('rooms')) || [];
+            rooms = rooms.filter(room => room.id !== currentRoom.id);
+            localStorage.setItem('rooms', JSON.stringify(rooms));
+            
+            let messages = JSON.parse(localStorage.getItem('messages')) || [];
+            messages = messages.filter(msg => msg.room_id !== currentRoom.id);
+            localStorage.setItem('messages', JSON.stringify(messages));
+            
+            window.location.href = 'home.html';
         }
 
-        // Инициализация
-        window.addEventListener('load', async function() {
-            console.log('Page loaded, initializing chat...');
-            
-            // Проверяем библиотеки
-            if (typeof window.supabase === 'undefined') {
-                console.error('Supabase library not loaded!');
-                alert('Библиотека Supabase не загружена');
-                return;
-            }
-            
-            if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
-                console.error('Config not loaded!');
-                alert('Конфигурация не загружена');
-                return;
-            }
-            
-            // Инициализируем Supabase
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase инициализирован');
-            
-            // Проверяем авторизацию
-            currentUser = await checkAuth();
+        document.addEventListener('DOMContentLoaded', function() {
+            currentUser = checkAuth();
             if (currentUser) {
                 document.getElementById('username-display').textContent = currentUser.username;
-                await loadRoom();
+                loadRoom();
             }
         });
 
@@ -531,13 +412,6 @@
         document.getElementById('logout-btn').addEventListener('click', function() {
             localStorage.removeItem('currentUser');
             window.location.href = 'index.html';
-        });
-
-        // Отписываемся при закрытии страницы
-        window.addEventListener('beforeunload', function() {
-            if (messageSubscription) {
-                supabaseClient.removeChannel(messageSubscription);
-            }
         });
     </script>
 </body>
