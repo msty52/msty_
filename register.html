@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Регистрация - Чат-комнаты</title>
-    <!-- Загружаем Supabase первым -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Затем config -->
-    <script src="config.js"></script>
     <style>
         * {
             margin: 0;
@@ -151,7 +147,7 @@
             <form id="register-form">
                 <div class="form-group">
                     <label for="username">Имя пользователя <span class="required">*</span></label>
-                    <input type="text" id="username" name="username" placeholder="Ведите ваше имя" required>
+                    <input type="text" id="username" name="username" placeholder="Введите ваше имя" required>
                     <small>Required. 150 characters or fewer. Letters, digits and @//+/-/. only.</small>
                     <div id="username-error" class="error-message hidden"></div>
                 </div>
@@ -188,62 +184,18 @@
     </div>
 
     <script>
-        // Проверяем загрузку библиотек
-        console.log('Supabase loaded:', typeof window.supabase);
-        console.log('Config loaded:', typeof SUPABASE_URL, typeof SUPABASE_ANON_KEY);
-        
-        let supabaseClient;
-
-        // Ждем полной загрузки страницы
-        window.addEventListener('load', function() {
-            console.log('Page loaded, initializing Supabase...');
-            
-            if (typeof window.supabase === 'undefined') {
-                console.error('Supabase library not loaded!');
-                document.getElementById('username-error').textContent = 'Библиотека Supabase не загружена';
-                document.getElementById('username-error').classList.remove('hidden');
-                return;
-            }
-            
-            if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
-                console.error('Config not loaded!');
-                document.getElementById('username-error').textContent = 'Конфигурация не загружена. Проверьте config.js';
-                document.getElementById('username-error').classList.remove('hidden');
-                return;
-            }
-            
-            try {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('Supabase успешно инициализирован');
-            } catch (error) {
-                console.error('Error initializing Supabase:', error);
-                document.getElementById('username-error').textContent = 'Ошибка инициализации Supabase: ' + error.message;
-                document.getElementById('username-error').classList.remove('hidden');
-            }
-        });
-
-        document.getElementById('register-form').addEventListener('submit', async function(e) {
+        document.getElementById('register-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('Форма отправляется...');
-            
-            if (!supabaseClient) {
-                console.error('Supabase не инициализирован');
-                document.getElementById('username-error').textContent = 'Supabase не инициализирован. Обновите страницу.';
-                document.getElementById('username-error').classList.remove('hidden');
-                return;
-            }
             
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const passwordConfirm = document.getElementById('password-confirm').value;
             
-            // Сброс ошибок
             document.querySelectorAll('.error-message').forEach(el => {
                 el.classList.add('hidden');
             });
 
-            // Валидация
             let isValid = true;
 
             if (username.length > 150) {
@@ -264,53 +216,23 @@
                 isValid = false;
             }
 
-            if (!isValid) {
-                console.log('Валидация не пройдена');
-                return;
-            }
+            if (!isValid) return;
 
-            console.log('Отправка данных в Supabase...', { username, email });
-
-            try {
-                // Регистрация в Supabase
-                const { data, error } = await supabaseClient
-                    .from('users')
-                    .insert([
-                        {
-                            username: username,
-                            email: email,
-                            password: password
-                        }
-                    ])
-                    .select()
-                    .single();
-
-                console.log('Ответ от Supabase:', { data, error });
-
-                if (error) {
-                    console.error('Ошибка Supabase:', error);
-                    if (error.code === '23505') {
-                        document.getElementById('username-error').textContent = 'Пользователь с таким именем или email уже существует';
-                        document.getElementById('username-error').classList.remove('hidden');
-                    } else {
-                        document.getElementById('username-error').textContent = 'Ошибка регистрации: ' + error.message;
-                        document.getElementById('username-error').classList.remove('hidden');
-                    }
-                } else {
-                    console.log('Регистрация успешна!');
-                    document.getElementById('success-message').textContent = 'Регистрация прошла успешно! Теперь вы можете войти в систему.';
-                    document.getElementById('success-message').classList.remove('hidden');
-                    document.getElementById('register-form').reset();
-                    
-                    setTimeout(() => {
-                        window.location.href = 'auth.html';
-                    }, 2000);
-                }
-            } catch (error) {
-                console.error('Ошибка сети:', error);
-                document.getElementById('username-error').textContent = 'Ошибка соединения с сервером: ' + error.message;
-                document.getElementById('username-error').classList.remove('hidden');
-            }
+            const user = {
+                id: Date.now(),
+                username: username,
+                email: email
+            };
+            
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            document.getElementById('success-message').textContent = 'Регистрация прошла успешно! Теперь вы можете войти в систему.';
+            document.getElementById('success-message').classList.remove('hidden');
+            document.getElementById('register-form').reset();
+            
+            setTimeout(() => {
+                window.location.href = 'auth.html';
+            }, 2000);
         });
     </script>
 </body>
