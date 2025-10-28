@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход - Чат-комнаты</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
     <style>
         * {
             margin: 0;
@@ -107,34 +105,10 @@
             color: #e74c3c;
             margin-top: 5px;
             font-size: 0.9rem;
-            background-color: #fdf2f2;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .success-message {
-            color: #27ae60;
-            margin-top: 5px;
-            font-size: 0.9rem;
-            background-color: #f0fff4;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #c3e6cb;
         }
         
         .hidden {
             display: none;
-        }
-        
-        .debug-info {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
-            font-size: 0.8rem;
-            color: #6c757d;
-            border: 1px solid #e9ecef;
         }
     </style>
 </head>
@@ -149,16 +123,15 @@
             <form id="login-form">
                 <div class="form-group">
                     <label for="username">Имя пользователя</label>
-                    <input type="text" id="username" name="username" placeholder="Введите имя пользователя" required value="msty_">
+                    <input type="text" id="username" name="username" placeholder="Введите имя пользователя" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Пароль</label>
-                    <input type="password" id="password" name="password" placeholder="Введите пароль" required value="Vadimka2007!">
+                    <input type="password" id="password" name="password" placeholder="Введите пароль" required>
                 </div>
                 
                 <div id="error-message" class="error-message hidden"></div>
-                <div id="success-message" class="success-message hidden"></div>
                 
                 <button type="submit" class="btn">Войти</button>
             </form>
@@ -168,149 +141,38 @@
             <div class="auth-links">
                 <p>Нет аккаунта? <a href="register.html">Зарегистрируйтесь</a></p>
             </div>
-            
-            <div class="debug-info hidden" id="debug-info">
-                <strong>Отладочная информация:</strong>
-                <div id="debug-content"></div>
-            </div>
         </div>
     </div>
 
     <script>
-        let supabaseClient;
-        let currentUser = null;
-
-        // Проверка авторизации
-        async function checkAuth() {
-            const user = localStorage.getItem('currentUser');
-            if (user) {
-                return JSON.parse(user);
-            }
-            return null;
-        }
-
-        // Показать отладочную информацию
-        function showDebugInfo(message) {
-            const debugInfo = document.getElementById('debug-info');
-            const debugContent = document.getElementById('debug-content');
-            debugContent.innerHTML = message;
-            debugInfo.classList.remove('hidden');
-        }
-
-        // Инициализация
-        window.addEventListener('load', async function() {
-            console.log('Page loaded, initializing auth...');
-            
-            // Проверяем библиотеки
-            if (typeof window.supabase === 'undefined') {
-                const error = 'Supabase library not loaded!';
-                console.error(error);
-                showDebugInfo(error);
-                return;
-            }
-            
-          <script>
-// ВСТАВЬТЕ СЮДА ВАШИ НАСТРОЙКИ SUPABASE
-const SUPABASE_URL = 'https://bgepyrtlzmqnljycvnqi.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnZXB5cnRsem1xbmxqeWN2bnFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0NTIxMjUsImV4cCI6MjA3NzAyODEyNX0.kqkNWji2uOaaV3qz2iarh6EuIDTfBrEEmPSQ-2ofdI0'; // из Supabase API Keys
-</script>
-            
-            // Инициализируем Supabase
-            try {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('Supabase инициализирован');
-                showDebugInfo('Supabase инициализирован успешно. URL: ' + SUPABASE_URL);
-            } catch (error) {
-                console.error('Error initializing Supabase:', error);
-                showDebugInfo('Ошибка инициализации Supabase: ' + error.message);
-                return;
-            }
-            
-            // Проверяем авторизацию
-            currentUser = await checkAuth();
-            if (currentUser) {
-                console.log('Пользователь уже авторизован:', currentUser.username);
-                window.location.href = 'index.html';
-            }
-        });
-
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
+        document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('error-message');
-            const successMessage = document.getElementById('success-message');
             
-            // Скрываем сообщения
-            errorMessage.classList.add('hidden');
-            successMessage.classList.add('hidden');
-            
-            console.log('Попытка входа:', username);
-            showDebugInfo('Попытка входа пользователя: ' + username);
-            
-            // Ждем инициализации supabase
-            if (!supabaseClient) {
-                const error = 'Supabase не инициализирован';
-                console.error(error);
-                errorMessage.textContent = error;
-                errorMessage.classList.remove('hidden');
-                showDebugInfo(error);
-                return;
-            }
-            
-            try {
-                console.log('Поиск пользователя в базе...');
-                showDebugInfo('Поиск пользователя ' + username + ' в базе данных...');
+            if (username && password) {
+                const user = {
+                    id: 1,
+                    username: username,
+                    email: username + '@example.com'
+                };
                 
-                // Ищем пользователя в базе данных
-                const { data: user, error } = await supabaseClient
-                    .from('users')
-                    .select('*')
-                    .eq('username', username)
-                    .eq('password', password)
-                    .single();
-
-                console.log('Результат поиска:', { user, error });
-                showDebugInfo('Результат поиска: ' + JSON.stringify({ user: user ? 'найден' : 'не найден', error: error ? error.message : 'нет' }));
-
-                if (error) {
-                    console.error('Ошибка поиска:', error);
-                    if (error.code === 'PGRST116') {
-                        errorMessage.textContent = 'Пользователь не найден';
-                        showDebugInfo('Ошибка: Пользователь не найден (PGRST116)');
-                    } else {
-                        errorMessage.textContent = 'Ошибка базы данных: ' + error.message;
-                        showDebugInfo('Ошибка базы данных: ' + error.message);
-                    }
-                    errorMessage.classList.remove('hidden');
-                } else if (!user) {
-                    console.log('Пользователь не найден');
-                    errorMessage.textContent = 'Неверное имя пользователя или пароль';
-                    errorMessage.classList.remove('hidden');
-                    showDebugInfo('Пользователь не найден в базе данных');
-                } else {
-                    console.log('Вход успешен, пользователь:', user);
-                    showDebugInfo('Вход успешен! Пользователь: ' + user.username + ', ID: ' + user.id);
-                    
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    successMessage.textContent = 'Вход выполнен успешно! Перенаправление...';
-                    successMessage.classList.remove('hidden');
-                    
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1000);
-                }
-            } catch (error) {
-                console.error('Ошибка сети:', error);
-                errorMessage.textContent = 'Ошибка соединения с сервером: ' + error.message;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                window.location.href = 'index.html';
+            } else {
+                errorMessage.textContent = 'Заполните все поля';
                 errorMessage.classList.remove('hidden');
-                showDebugInfo('Ошибка сети: ' + error.message);
             }
         });
 
-        // Автозаполнение для тестирования
-        console.log('Auto-filled credentials: msty_ / Vadimka2007!');
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                window.location.href = 'index.html';
+            }
+        });
     </script>
 </body>
 </html>
