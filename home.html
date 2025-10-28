@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Чат-комнаты - Главная</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
     <style>
-        /* Стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -229,11 +226,7 @@
     </footer>
 
     <script>
-        let supabaseClient;
-        let currentUser = null;
-
-        // Проверка авторизации
-        async function checkAuth() {
+        function checkAuth() {
             const user = localStorage.getItem('currentUser');
             if (!user) {
                 window.location.href = 'auth.html';
@@ -242,103 +235,57 @@
             return JSON.parse(user);
         }
 
-        // Загрузка комнат
-        async function loadRooms() {
-            try {
-                console.log('Загрузка комнат...');
-                const { data: rooms, error } = await supabaseClient
-                    .from('rooms')
-                    .select(`
-                        *,
-                        users:creator_id(username)
-                    `)
-                    .order('created_at', { ascending: false });
+        function loadRooms() {
+            const rooms = JSON.parse(localStorage.getItem('rooms')) || [];
+            const currentUser = checkAuth();
+            
+            if (!currentUser) return;
 
-                if (error) {
-                    console.error('Ошибка загрузки комнат:', error);
-                    return;
-                }
-
-                console.log('Загружено комнат:', rooms);
-
-                const roomsGrid = document.getElementById('rooms-grid');
-                const noRooms = document.getElementById('no-rooms');
-                
-                if (!rooms || rooms.length === 0) {
-                    roomsGrid.classList.add('hidden');
-                    noRooms.classList.remove('hidden');
-                    return;
-                }
-
-                roomsGrid.innerHTML = '';
-                
-                rooms.forEach(room => {
-                    const roomCard = document.createElement('div');
-                    roomCard.className = 'room-card';
-                    roomCard.innerHTML = `
-                        <h3>${room.name}</h3>
-                        <p>${room.description || 'Нет описания'}</p>
-                        <div class="room-meta">
-                            <span>Создатель: ${room.users.username}</span>
-                            <span>${new Date(room.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <div class="room-actions">
-                            <a href="room_detail.html?room=${room.id}" class="btn">Войти в чат</a>
-                            ${room.creator_id === currentUser.id ? 
-                              `<button class="btn btn-danger" onclick="deleteRoom('${room.id}')">Удалить</button>` : ''}
-                        </div>
-                    `;
-                    roomsGrid.appendChild(roomCard);
-                });
-
-                roomsGrid.classList.remove('hidden');
-                noRooms.classList.add('hidden');
-
-            } catch (error) {
-                console.error('Ошибка:', error);
+            const roomsGrid = document.getElementById('rooms-grid');
+            const noRooms = document.getElementById('no-rooms');
+            
+            if (rooms.length === 0) {
+                roomsGrid.classList.add('hidden');
+                noRooms.classList.remove('hidden');
+                return;
             }
+
+            roomsGrid.innerHTML = '';
+            
+            rooms.forEach(room => {
+                const roomCard = document.createElement('div');
+                roomCard.className = 'room-card';
+                roomCard.innerHTML = `
+                    <h3>${room.name}</h3>
+                    <p>${room.description || 'Нет описания'}</p>
+                    <div class="room-meta">
+                        <span>Создатель: ${room.creator}</span>
+                        <span>${new Date(room.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="room-actions">
+                        <a href="room_detail.html?room=${room.id}" class="btn">Войти в чат</a>
+                        ${room.creator_id === currentUser.id ? 
+                          `<button class="btn btn-danger" onclick="deleteRoom('${room.id}')">Удалить</button>` : ''}
+                    </div>
+                `;
+                roomsGrid.appendChild(roomCard);
+            });
+
+            roomsGrid.classList.remove('hidden');
+            noRooms.classList.add('hidden');
         }
 
-        async function deleteRoom(roomId) {
+        function deleteRoom(roomId) {
             if (!confirm('Вы уверены, что хотите удалить эту комнату?')) return;
 
-            try {
-                const { error } = await supabaseClient
-                    .from('rooms')
-                    .delete()
-                    .eq('id', roomId);
-
-                if (error) {
-                    alert('Ошибка при удалении комнаты: ' + error.message);
-                } else {
-                    loadRooms(); // Перезагружаем список комнат
-                }
-            } catch (error) {
-                console.error('Ошибка:', error);
-            }
+            let rooms = JSON.parse(localStorage.getItem('rooms')) || [];
+            rooms = rooms.filter(room => room.id !== roomId);
+            localStorage.setItem('rooms', JSON.stringify(rooms));
+            loadRooms();
         }
 
-        // Инициализация
-        window.addEventListener('load', async function() {
-            console.log('Page loaded, initializing...');
-            
-            // Проверяем библиотеки
-            if (typeof window.supabase === 'undefined') {
-                console.error('Supabase library not loaded!');
-                return;
-            }
-            
-            if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
-                console.error('Config not loaded!');
-                return;
-            }
-            
-            // Инициализируем Supabase
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase инициализирован');
-            
-            // Проверяем авторизацию
-            currentUser = await checkAuth();
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = checkAuth();
             if (currentUser) {
                 document.getElementById('username-display').textContent = currentUser.username;
                 loadRooms();
